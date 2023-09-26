@@ -1,0 +1,45 @@
+package com.verkada.android.catpictures.ui.composable
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import com.verkada.android.catpictures.data.model.Picture
+import com.verkada.android.catpictures.ui.viewmodel.HomeViewModel
+
+@Composable
+fun HomeScreen(viewModel: HomeViewModel) {
+    val uiState = viewModel.uiState.collectAsState()
+    val picturePagingItems: LazyPagingItems<Picture> =
+        uiState.value.picturePagingData.collectAsLazyPagingItems()
+
+    Column {
+        ImagePreview(
+            pictureUrl = uiState.value.selectedPicture?.url,
+            isFavorite = uiState.value.favoritePictures.contains(uiState.value.selectedPicture),
+            onFavoriteToggled = {
+                uiState.value.selectedPicture?.let {
+                    viewModel.toggleFavorite(it)
+                }
+            },
+        )
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 128.dp),
+            contentPadding = PaddingValues(2.dp),
+        ) {
+            items(picturePagingItems.itemCount) { index ->
+                picturePagingItems[index]?.let { picture ->
+                    GridImage(
+                        pictureUrl = picture.url,
+                        onPictureClick = { viewModel.selectPicture(picture) },
+                    )
+                }
+            }
+        }
+    }
+}
